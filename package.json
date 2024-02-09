@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@parcel/transformer-css": "^2.11.0",
+    "@types/obj-file-parser": "^0.5.2",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
@@ -23,6 +24,7 @@
   },
   "dependencies": {
     "gl-matrix": "^3.4.3",
+    "obj-file-parser": "^0.6.2",
     "world.ts": "^0.1.6"
   }
 }

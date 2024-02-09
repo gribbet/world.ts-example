@@ -1,7 +1,7 @@
-import { quat, vec3 } from "gl-matrix";
+import { vec3 } from "gl-matrix";
 import { createMouseControl, createWorld } from "world.ts";
 
-import { indices, vertices } from "./k1000";
+import { loadObj } from "./obj";
 
 /**
  * TODO:
@@ -18,6 +18,11 @@ export const terrainUrl =
   "https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZ3JhaGFtZ2liYm9ucyIsImEiOiJja3Qxb3Q5bXQwMHB2MnBwZzVyNzgyMnZ6In0.4qLjlbLm6ASuJ5v5gN6FHQ";
 
 let position: vec3 = [-121, 38, 10000];
+
+const model = await loadObj(new URL("./k1000.obj", import.meta.url).toString());
+const modelOutline = await loadObj(
+  new URL("./k1000-outline.obj", import.meta.url).toString(),
+);
 
 const canvas = document.querySelector("canvas") as HTMLCanvasElement;
 
@@ -47,31 +52,44 @@ world.addTerrain({
   imageryUrl,
 });
 
+const meshOutline = world.addMesh({
+  vertices: modelOutline.vertices,
+  indices: modelOutline.indices,
+  position,
+  size: 1 / 1000,
+  minSizePixels: 0.2,
+});
+
 const mesh = world.addMesh({
-  vertices,
-  indices,
+  vertices: model.vertices,
+  indices: model.indices,
   position,
   size: 1 / 1000,
   minSizePixels: 0.2,
 });
 
 world.onMouseDown(({ position, layer }) => {
-  console.log("MouseDown", layer);
-  if (layer === mesh) {
+  if (layer === meshOutline || layer === mesh) {
     control.enabled = false;
     mesh.pickable = false;
+    meshOutline.pickable = false;
     dragging = vec3.sub(vec3.create(), position, mesh.position);
   }
 });
 
 world.onMouseMove(({ position }) => {
-  if (dragging) mesh.position = vec3.sub(vec3.create(), position, dragging);
+  if (dragging) {
+    position = vec3.sub(vec3.create(), position, dragging);
+    mesh.position = position;
+    meshOutline.position = position;
+  }
 });
 
 world.onMouseUp(() => {
   dragging = undefined;
   control.enabled = true;
   mesh.pickable = true;
+  meshOutline.pickable = true;
 });
 
 const stem = world.addLine({
@@ -93,9 +111,6 @@ const frame = (time: number) => {
     [lng, newLat, 0],
     [lng, newLat, alt],
   ];
-  const roll = time / 100;
-  const pitch = Math.sin(time * 0.001) * 5;
-  mesh.orientation = quat.fromEuler(quat.create(), pitch, roll, 0);
   requestAnimationFrame(frame);
 };
 
