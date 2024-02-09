@@ -1,4 +1,5 @@
-import { quat, vec3 } from "gl-matrix";
+import type { vec3 } from "gl-matrix";
+import { quat } from "gl-matrix";
 import { createMouseControl, createWorld } from "world.ts";
 
 import { loadObj } from "./obj";
@@ -43,7 +44,7 @@ world.addLine({
   minWidthPixels: 4,
 });
 
-let dragging: vec3 | undefined;
+let dragging = false;
 world.addTerrain({
   terrainUrl,
   imageryUrl,
@@ -58,25 +59,22 @@ const mesh = world.addMesh({
   minSizePixels: 10,
 });
 
-world.onMouseDown(({ position, layer }) => {
+world.onMouseDown(({ layer }) => {
   if (layer === mesh) {
     control.enabled = false;
     mesh.pickable = false;
-    dragging = vec3.sub(vec3.create(), position, mesh.position);
+    dragging = true;
   }
 });
 
 world.onMouseMove(({ position }) => {
-  if (dragging) {
-    position = vec3.sub(vec3.create(), position, dragging);
-    mesh.position = position;
-  }
+  if (dragging) mesh.position = position;
 });
 
 world.onMouseUp(() => {
-  dragging = undefined;
   control.enabled = true;
   mesh.pickable = true;
+  dragging = false;
 });
 
 const stem = world.addLine({
