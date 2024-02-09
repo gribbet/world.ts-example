@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { quat, vec3 } from "gl-matrix";
 import { createMouseControl, createWorld } from "world.ts";
 
 import { loadObj } from "./obj";
@@ -19,10 +19,7 @@ export const terrainUrl =
 
 let position: vec3 = [-121, 38, 10000];
 
-const model = await loadObj(new URL("./k1000.obj", import.meta.url).toString());
-const modelOutline = await loadObj(
-  new URL("./k1000-outline.obj", import.meta.url).toString(),
-);
+const model = await loadObj(new URL("./cow.obj", import.meta.url).toString());
 
 const canvas = document.querySelector("canvas") as HTMLCanvasElement;
 
@@ -52,27 +49,19 @@ world.addTerrain({
   imageryUrl,
 });
 
-const meshOutline = world.addMesh({
-  vertices: modelOutline.vertices,
-  indices: modelOutline.indices,
-  position,
-  size: 1 / 1000,
-  minSizePixels: 0.2,
-});
-
 const mesh = world.addMesh({
   vertices: model.vertices,
   indices: model.indices,
   position,
-  size: 1 / 1000,
-  minSizePixels: 0.2,
+  orientation: quat.setAxisAngle(quat.create(), [1, 0, 0], Math.PI / 2),
+  size: 100,
+  minSizePixels: 10,
 });
 
 world.onMouseDown(({ position, layer }) => {
-  if (layer === meshOutline || layer === mesh) {
+  if (layer === mesh) {
     control.enabled = false;
     mesh.pickable = false;
-    meshOutline.pickable = false;
     dragging = vec3.sub(vec3.create(), position, mesh.position);
   }
 });
@@ -81,7 +70,6 @@ world.onMouseMove(({ position }) => {
   if (dragging) {
     position = vec3.sub(vec3.create(), position, dragging);
     mesh.position = position;
-    meshOutline.position = position;
   }
 });
 
@@ -89,7 +77,6 @@ world.onMouseUp(() => {
   dragging = undefined;
   control.enabled = true;
   mesh.pickable = true;
-  meshOutline.pickable = true;
 });
 
 const stem = world.addLine({
